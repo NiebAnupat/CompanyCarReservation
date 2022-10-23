@@ -71,8 +71,10 @@ export default {
   methods: {
     async login() {
       await this.$store.dispatch('Auth/setAuthTrue')
-      if (this.username == 'admin') this.$router.push('admin/')
-      else this.$router.push('user/')
+      if (this.username == 'admin') {
+        await this.$store.dispatch('Auth/setAdminTrue')
+        this.$router.push('admin/')
+      } else this.$router.push('user/')
     },
   },
 }

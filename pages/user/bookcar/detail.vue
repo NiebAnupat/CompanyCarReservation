@@ -1,3 +1,4 @@
+//@collapse
 <template>
   <div class="mt-16">
     <v-dialog v-model="dialog" persistent width="500">

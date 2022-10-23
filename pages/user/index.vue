@@ -278,9 +278,4 @@ export default {
 #payCard {
   background-color: #3f4e4f;
 }
-
-#myQR {
-  margin-left: 25%;
-  background-color: transparent;
-}
 </style>

@@ -1,3 +1,4 @@
+//@collapse
 <template>
   <v-card>
     <v-carousel height="200px">

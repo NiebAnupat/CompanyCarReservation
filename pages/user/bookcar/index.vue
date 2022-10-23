@@ -1,3 +1,4 @@
+//@collapse
 <template>
   <div class="mt-16">
     <div class="d-flex">

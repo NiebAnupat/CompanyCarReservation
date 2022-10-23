@@ -20,11 +20,13 @@
     <v-navigation-drawer v-model="drawer" absolute temporary app>
       <v-list-item class="my-3">
         <v-list-item-avatar>
-          <v-img :src="user.avatar"></v-img>
+          <v-img :src="isAdmin ? admin.avatar : user.avatar"></v-img>
         </v-list-item-avatar>
 
         <v-list-item-content>
-          <v-list-item-title>{{ user.name }}</v-list-item-title>
+          <v-list-item-title>{{
+            isAdmin ? admin.name : user.name
+          }}</v-list-item-title>
         </v-list-item-content>
       </v-list-item>
 
@@ -32,7 +34,7 @@
 
       <v-list>
         <v-list-item
-          v-for="item in userItems"
+          v-for="item in isAdmin ? adminItems : userItems"
           :key="item.title"
           link
           v-on:click="item.action"
@@ -59,12 +61,19 @@ export default {
   name: 'DefaultLayout',
 
   // async asyncData({ store }) {
-  //   isAuth = await store.getters['Auth/isAuth']
+  //   const isAuth = await store.getters['Auth/isAuth']
+  //   const isAdmin = await store.getters['Auth/isAdmin']
+
+  //   return { isAuth, isAdmin }
   // },
 
   computed: {
     isAuth() {
       return this.$store.getters['Auth/isAuth']
+    },
+
+    isAdmin() {
+      return this.$store.getters['Auth/isAdmin']
     },
   },
 
@@ -73,6 +82,11 @@ export default {
       drawer: false,
       user: {
         name: 'ผู้ใช้งาน เว็บไซต์',
+        avatar: 'https://ui-avatars.com/api/background=random',
+      },
+
+      admin: {
+        name: 'ผู้ดูแล ระบบ',
         avatar: 'https://ui-avatars.com/api/background=random',
       },
 
@@ -112,7 +126,7 @@ export default {
         },
         {
           title: 'อนุมัติการจอง',
-          icon: 'mdi-car',
+          icon: 'mdi-book-check',
           action: () => this.$router.push('/admin/bookcar'),
         },
         {
