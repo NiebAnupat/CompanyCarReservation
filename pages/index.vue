@@ -57,8 +57,10 @@ export default {
   name: 'Index',
   layout: 'default',
 
-  asyncData({ store }) {
-    store.dispatch('Auth/setAuthFalse')
+  mounted() {
+    setTimeout(() => {
+      this.$store.dispatch('Auth/setAuthFalse')
+    }, 250)
   },
 
   data() {

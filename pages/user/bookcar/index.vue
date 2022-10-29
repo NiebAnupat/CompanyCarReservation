@@ -1,6 +1,6 @@
 //@collapse
 <template>
-  <div class="mt-16">
+  <div>
     <div class="d-flex">
       <v-icon class="mr-3 mb-4" size="35" color="#2c3639"> mdi-car </v-icon>
       <h1>จองใช้งานรถ</h1>

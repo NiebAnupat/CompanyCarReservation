@@ -1,6 +1,6 @@
 //@collapse
 <template>
-  <div class="mt-16">
+  <div>
     <div class="d-flex">
       <v-icon class="mr-3" size="35" color="#1F5078">
         mdi-account-credit-card

@@ -51,7 +51,9 @@
     </v-navigation-drawer>
 
     <v-container>
-      <Nuxt />
+      <v-main>
+        <Nuxt />
+      </v-main>
     </v-container>
   </v-app>
 </template>
@@ -138,6 +140,11 @@ export default {
           title: 'อนุมัติการชำระเงิน',
           icon: 'mdi-credit-card',
           action: () => this.$router.push('/admin/payment'),
+        },
+        {
+          title: 'รายงานการใช้งานรถ',
+          icon: 'mdi-chart-bar',
+          action: () => this.$router.push('/admin/report'),
         },
         {
           title: 'ออกจากระบบ',

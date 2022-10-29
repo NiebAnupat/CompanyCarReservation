@@ -1,6 +1,6 @@
 //@collapse
 <template>
-  <div class="mt-16">
+  <div>
     <v-dialog v-model="dialog" persistent width="500">
       <v-card>
         <v-card-title class="text-h5"> ยืนยันการจอง </v-card-title>

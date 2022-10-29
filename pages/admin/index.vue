@@ -1,5 +1,5 @@
 <template>
-  <div class="mt-16">
+  <div>
     <div class="d-flex">
       <v-icon class="mr-3 mb-2" size="35" color="#2c3639">
         mdi-monitor-dashboard
@@ -41,11 +41,18 @@
       </v-row>
       <v-row>
         <v-col cols="6">
-          <v-btn block color="primary"> ดูรายการจอง </v-btn>
+          <v-btn block color="primary" @click="navigateBookCar">
+            ดูรายการจอง
+          </v-btn>
         </v-col>
         <v-col cols="6">
-          <v-btn block color="green accent-4" class="white--text">
-            ประวัติการจอง
+          <v-btn
+            block
+            color="green accent-4"
+            class="white--text"
+            @click="navigateReport"
+          >
+            รายงานการใช้งาน
           </v-btn>
         </v-col>
       </v-row>
@@ -60,7 +67,7 @@
           </v-card>
         </v-col>
         <v-col cols="6">
-          <v-card class="pa-4 d-flex white--text" color="#c90f30">
+          <v-card class="pa-4 d-flex white--text" color="deep-orange darken-1">
             <v-card-title> ตรวจสอบแล้ว </v-card-title>
             <v-card-title class="mx-auto">{{ payCheckCount }}</v-card-title>
             <v-card-title class="ml-auto">รายการ</v-card-title>
@@ -69,8 +76,13 @@
       </v-row>
       <v-row>
         <v-col cols="12">
-          <v-btn block color="purple darken-2" class="white--text">
-            ตรวจสอบยอดชำระเงิน
+          <v-btn
+            block
+            color="purple darken-2"
+            class="white--text"
+            @click="navigatePayment"
+          >
+            ตรวจสอบยอดชำระ
           </v-btn>
         </v-col>
       </v-row>
@@ -81,6 +93,10 @@
 export default {
   name: 'index',
 
+  asyncData({ store }) {
+    store.dispatch('Auth/setAuthTrue')
+  },
+
   data() {
     return {
       bookCount: 10,
@@ -89,6 +105,20 @@ export default {
       payCount: 3,
       payCheckCount: 2,
     }
+  },
+
+  methods: {
+    navigateBookCar() {
+      this.$router.push('/admin/bookcar')
+    },
+
+    navigatePayment() {
+      this.$router.push('/admin/payment')
+    },
+
+    navigateReport() {
+      this.$router.push('/admin/report')
+    },
   },
 }
 </script>
