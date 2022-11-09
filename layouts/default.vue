@@ -1,6 +1,6 @@
 <template>
   <v-app>
-    <v-app-bar
+    <!-- <v-app-bar
       app
       flat
       :value="isAuth"
@@ -15,11 +15,17 @@
         <v-icon size="35" color="white">mdi-van-passenger</v-icon>
         <span class="text-h5 ml-3">จองใช้งานรถส่วนกลาง</span></v-toolbar-title
       >
-    </v-app-bar>
+    </v-app-bar> -->
 
-    <v-navigation-drawer v-model="drawer" absolute temporary app>
-      <v-list-item class="my-3">
-        <v-list-item-avatar>
+    <v-navigation-drawer
+      v-model="drawer"
+      app
+      expand-on-hover
+      v-if="isAuth"
+      color="#2C3639"
+    >
+      <v-list-item class="my-3 white--text">
+        <v-list-item-avatar class="ml-n2">
           <v-img :src="isAdmin ? admin.avatar : user.avatar"></v-img>
         </v-list-item-avatar>
 
@@ -30,7 +36,7 @@
         </v-list-item-content>
       </v-list-item>
 
-      <v-divider></v-divider>
+      <v-divider color="#fff"></v-divider>
 
       <v-list>
         <v-list-item
@@ -38,9 +44,10 @@
           :key="item.title"
           link
           v-on:click="item.action"
+          class="white--text"
         >
           <v-list-item-icon>
-            <v-icon>{{ item.icon }}</v-icon>
+            <v-icon color="#fff">{{ item.icon }}</v-icon>
           </v-list-item-icon>
 
           <v-list-item-content>
@@ -48,12 +55,23 @@
           </v-list-item-content>
         </v-list-item>
       </v-list>
+
+      <template v-slot:append>
+        <v-list>
+          <v-list-item link v-on:click="logout" class="red--text lighten-1">
+            <v-list-item-icon>
+              <v-icon color="red lighten-1">mdi-logout</v-icon>
+            </v-list-item-icon>
+            <v-list-item-content>
+              <v-list-item-title>ออกจากระบบ</v-list-item-title>
+            </v-list-item-content>
+          </v-list-item>
+        </v-list>
+      </template>
     </v-navigation-drawer>
 
-    <v-container>
-      <v-main>
-        <Nuxt />
-      </v-main>
+    <v-container class="ma-auto" style="height: 95%">
+      <Nuxt class="ml-10 pb-5" />
     </v-container>
   </v-app>
 </template>
@@ -62,12 +80,12 @@
 export default {
   name: 'DefaultLayout',
 
-  // async asyncData({ store }) {
-  //   const isAuth = await store.getters['Auth/isAuth']
-  //   const isAdmin = await store.getters['Auth/isAdmin']
+  async asyncData({ store }) {
+    const isAuth = await store.getters['Auth/isAuth']
+    const isAdmin = await store.getters['Auth/isAdmin']
 
-  //   return { isAuth, isAdmin }
-  // },
+    return { isAuth, isAdmin }
+  },
 
   computed: {
     isAuth() {
@@ -104,6 +122,11 @@ export default {
           action: () => this.$router.push('/user/bookcar'),
         },
         {
+          title: 'คืนรถ',
+          icon: 'mdi-car-arrow-right',
+          action: () => this.$router.push('/user/returncar'),
+        },
+        {
           title: 'ประวัติการจอง',
           icon: 'mdi-history',
           action: () => this.$router.push('/user/history'),
@@ -112,11 +135,6 @@ export default {
           title: 'ชำระเงิน',
           icon: 'mdi-credit-card',
           action: () => this.$router.push('/user/payment'),
-        },
-        {
-          title: 'ออกจากระบบ',
-          icon: 'mdi-logout',
-          action: () => this.$router.push('/'),
         },
       ],
 
@@ -127,7 +145,7 @@ export default {
           action: () => this.$router.push('/admin'),
         },
         {
-          title: 'อนุมัติการจอง',
+          title: 'ตรวจสอบการจอง',
           icon: 'mdi-book-check',
           action: () => this.$router.push('/admin/bookcar'),
         },
@@ -137,7 +155,12 @@ export default {
           action: () => this.$router.push('/admin/managecar'),
         },
         {
-          title: 'อนุมัติการชำระเงิน',
+          title: 'ตรวจสอบการคืนรถ',
+          icon: 'mdi-car-arrow-right',
+          action: () => this.$router.push('/admin/returncar'),
+        },
+        {
+          title: 'ตรวจสอบการชำระเงิน',
           icon: 'mdi-credit-card',
           action: () => this.$router.push('/admin/payment'),
         },
@@ -146,18 +169,14 @@ export default {
           icon: 'mdi-chart-bar',
           action: () => this.$router.push('/admin/report'),
         },
-        {
-          title: 'ออกจากระบบ',
-          icon: 'mdi-logout',
-          action: () => this.$router.push('/'),
-        },
       ],
     }
   },
 
   methods: {
-    visibleDrawer() {
-      this.$store.dispatch('setDrawerVisible')
+    logout() {
+      this.$store.dispatch('Auth/setAdminFalse')
+      this.$router.push('/')
     },
   },
 }

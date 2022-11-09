@@ -1,4 +1,3 @@
-//@collapse
 <template>
   <div>
     <div class="d-flex">
@@ -28,7 +27,6 @@
 </template>
 
 <script>
-import CarCard from '../../../components/bookcar/CarCard.vue'
 export default {
   name: 'bookcar',
   async asyncData({ store }) {
@@ -46,7 +44,6 @@ export default {
       console.log('search')
     },
   },
-  components: { CarCard },
 }
 </script>
 

@@ -3,6 +3,11 @@ export const state = () => ({
   isAdmin: false,
 })
 
+export const getters = {
+  isAuth: (state) => state.isAuth,
+  isAdmin: (state) => state.isAdmin,
+}
+
 export const mutations = {
   toggleAuth(state) {
     state.isAuth = !state.isAuth
@@ -37,9 +42,4 @@ export const actions = {
   setAdminTrue({ commit }) {
     commit('setAdmin', true)
   },
-}
-
-export const getters = {
-  isAuth: (state) => state.isAuth,
-  isAdmin: (state) => state.isAdmin,
 }

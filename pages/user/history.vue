@@ -1,6 +1,5 @@
-//@collapse
 <template>
-  <div>
+  <div class="">
     <div class="d-flex">
       <v-icon class="mr-3 mb-4" size="35" color="blue"> mdi-history </v-icon>
       <h1>ประวัติการจอง</h1>
@@ -24,6 +23,8 @@
       :items-per-page="10"
       :search="search"
       class="elevation-1 rounded-md"
+      no-data-text="ไม่มีข้อมูลการใช้งานรถ"
+      no-results-text="ไม่พบข้อมูลที่ค้นหา"
     >
       <!-- Chip -->
       <template v-slot:item.status="{ item }">

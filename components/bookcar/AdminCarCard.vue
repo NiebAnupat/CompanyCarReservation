@@ -10,7 +10,7 @@
       <v-carousel-item
         v-for="(item, i) in car.images"
         :key="i"
-        :src="item"
+        :src="typeof item == 'object' ? toImgUrl(item) : item"
         reverse-transition="fade-transition"
         transition="fade-transition"
       ></v-carousel-item>
@@ -22,36 +22,36 @@
       </div>
     </v-card-title>
     <v-card-actions>
-      <!-- รายการโปรด -->
-      <v-btn
-        icon
-        @click="toggleFavorite"
-        :color="car.isFavorite ? 'red' : 'grey'"
-      >
-        <v-icon>mdi-heart</v-icon>
-      </v-btn>
       <v-spacer></v-spacer>
-      <v-btn color="primary" class="ml-auto" text @click="booking()">จอง</v-btn>
+      <v-btn color="primary" class="ml-auto" text @click="setEditCar(car)">
+        แก้ไข</v-btn
+      >
+      <v-btn color="error" class="ml-auto" text @click="deleteCar(car.id)">
+        ลบ</v-btn
+      >
     </v-card-actions>
   </v-card>
 </template>
 <script>
 export default {
-  name: 'CarCard',
+  name: 'AdminCarCard',
   props: {
     car: {
       type: Object,
       required: true,
     },
+    setEditCar: {
+      type: Function,
+      required: true,
+    },
+    deleteCar: {
+      type: Function,
+      required: true,
+    },
   },
   methods: {
-    async booking() {
-      await this.$store.dispatch('Car/setSelectedCar', this.car)
-      this.$router.push('/user/bookcar/detail')
-    },
-    async toggleFavorite() {
-      await this.$store.dispatch('Car/toggleFavorite', this.car)
-      console.log(this.$store.getters['Car/getCars'])
+    toImgUrl(img) {
+      return URL.createObjectURL(img)
     },
   },
 }

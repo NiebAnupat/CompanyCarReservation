@@ -1,4 +1,3 @@
-//@collapse
 <template>
   <div>
     <v-dialog v-model="dialog" persistent width="500">
@@ -21,7 +20,7 @@
         <v-card>
           <v-carousel height="200px">
             <v-carousel-item
-              v-for="(item, i) in car.image"
+              v-for="(item, i) in car.images"
               :key="i"
               :src="item"
               reverse-transition="fade-transition"

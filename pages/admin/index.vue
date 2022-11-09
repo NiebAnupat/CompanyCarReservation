@@ -95,6 +95,7 @@ export default {
 
   asyncData({ store }) {
     store.dispatch('Auth/setAuthTrue')
+    store.dispatch('Auth/setAdminTrue')
   },
 
   data() {
