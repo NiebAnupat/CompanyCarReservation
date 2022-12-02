@@ -305,8 +305,6 @@ export default {
   methods : {
     showDetail() {
       this.dialog = true
-      // clear selected
-      this.$store.dispatch( 'Reservation/setSelected', null )
     },
 
     formatDate( date ) {
@@ -328,7 +326,6 @@ export default {
 
 
     setSelectReservation( item ) {
-      console.log( item )
       this.selected = {
         R_ID : item.R_ID,
         R_DATE_BOOK : this.formatDate( item.R_TIME_BOOK ),

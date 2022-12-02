@@ -1,4 +1,4 @@
-<template lang="th">
+<template>
     <v-row>
     <v-col cols="12" md="12">
       <v-card elevation="3" class="mt-4 rounded-xl pa-3">
@@ -32,7 +32,7 @@
             no-data-text="ไม่มีข้อมูลการจอง"
             no-results-text="ไม่พบข้อมูลที่ค้นหา"
           >
-           
+
 
             <template v-slot:item.detail="{ item }">
               <v-tooltip top>
@@ -77,7 +77,7 @@
               readonly
             ></v-text-field>
           </v-col>
-          
+
         </v-row>
         <v-row class="mt-n6">
             <v-col cols="4">
@@ -171,41 +171,15 @@
     </v-card-actions>
   </v-card>
 </v-dialog>
-    <!-- Note Dialog -->
-<v-dialog v-model="noteDialog" max-width="600px">
-      <v-card class="rounded-xl pa-1">
-        <v-card-title class="headline"> หมายเหตุ </v-card-title>
-        <v-card-text>
-          <v-container>
-            <v-row>
-              <v-col cols="12">
-                <v-textarea
-                  v-model="adminNote"
-                  label="หมายเหตุ"
-                  outlined
-                  rows="3"
-                  hide-details
-                ></v-textarea>
-              </v-col>
-            </v-row>
-          </v-container>
-        </v-card-text>
-        <v-card-actions class="mt-n5">
-          <v-spacer></v-spacer>
-          <v-btn color="blue darken-1" text @click="noteDialog = false">
-            ปิด
-          </v-btn>
-          <v-btn color="blue darken-1" text @click="addNote"> บันทึก </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
   </v-row>
 </template>
 <script>
 export default {
 
-  asyncData({ isDev, route, store, env, params, query, req, res, redirect, error }) {
-    store.dispatch('Auth/setAdminTrue')
+  async asyncData( { store, $axios } ) {
+    await store.dispatch( 'Auth/setAdminTrue' )
+    const returnCars = await $axios.$get( '/reservation/returned' )
+    console.log( returnCars )
   },
 
   data() {
@@ -215,63 +189,28 @@ export default {
       search: '',
       adminNote: '',
       pendingBookings: [
-        {
-          id: 1,
-          date: '2020-01-01',
-          car: 'รถยนต์ 1',
-          time: '08:00',
-          status: 'รออนุมัติ',
-        },
-        {
-          id: 2,
-          date: '2020-01-01',
-          car: 'รถยนต์ 2',
-          time: '08:00',
-          status: 'รออนุมัติ',
-        },
-        {
-          id: 3,
-          date: '2020-01-07',
-          car: 'รถยนต์ 3',
-          time: '08:00',
-          status: 'รออนุมัติ',
-        },
-        {
-          id: 4,
-          date: '2020-01-06',
-          car: 'รถยนต์ 4',
-          time: '08:00',
-          status: 'รออนุมัติ',
-        },
-        {
-          id: 5,
-          date: '2020-01-05',
-          car: 'รถยนต์ 5',
-          time: '08:00',
-          status: 'รออนุมัติ',
-        },
+
       ],
 
       detail: {
-        date: '12/12/2020',
-        time: '09:30',
-        returnDate: '1/1/2021',
-        returnTime: '10:30',
-        car: 'รถ 1',
-        reason: 'จองรถเพื่อไปเที่ยว',
-        returnNote: 'ไม่มี',
-        returnedDate: '1/1/2021',
-        returnedTime: '10:30',
-        returnedImg: 'https://img.freepik.com/free-psd/white-sport-car_176382-1598.jpg?w=2000',
+        // date: '12/12/2020',
+        // time: '09:30',
+        // returnDate: '1/1/2021',
+        // returnTime: '10:30',
+        // car: 'รถ 1',
+        // reason: 'จองรถเพื่อไปเที่ยว',
+        // returnNote: 'ไม่มี',
+        // returnedDate: '1/1/2021',
+        // returnedTime: '10:30',
+        // returnedImg: 'https://img.freepik.com/free-psd/white-sport-car_176382-1598.jpg?w=2000',
       },
 
       headers: [
         {
           text: 'รหัสการจอง',
-          align: 'start',
+          align: 'center',
           sortable: true,
           value: 'id',
-          align: 'center',
           width: '11%',
           class: 'text-center',
         },
@@ -294,7 +233,7 @@ export default {
           value: 'car',
           class: 'text-center',
         },
-        
+
         {
           text: 'รายละเอียด',
           value: 'detail',
@@ -303,7 +242,7 @@ export default {
           sortable: false,
           class: 'text-center',
         },
-       
+
       ],
     }
   },

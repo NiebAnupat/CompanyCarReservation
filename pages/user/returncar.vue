@@ -67,6 +67,8 @@
         </v-col>
         <v-col cols="4">
           <v-file-input
+            :disabled="isDisabled"
+            ref="file"
             label="หลักฐานการคืนรถ"
             prepend-icon="mdi-camera"
             outlined
@@ -82,6 +84,8 @@
       <v-row class="mt-n5">
         <v-col cols="12">
           <v-textarea
+            :disabled="isDisabled"
+            ref="comment"
             label="หมายเหตุ"
             outlined
             color="#2c3639"
@@ -94,7 +98,7 @@
     </v-card-text>
     <v-card-actions>
       <v-spacer></v-spacer>
-      <v-btn text color="blue" @click="returnCar">ยืนยัน</v-btn>
+      <v-btn :disabled="isDisabled" text color="blue" @click="returnCar">ยืนยัน</v-btn>
     </v-card-actions>
   </v-card>
 </template>
@@ -103,9 +107,25 @@ export default {
   async asyncData({ store, $axios }) {
     store.dispatch('Auth/setAuthTrue')
     const { EM_ID } = store.getters['Auth/getUser']
-    const last = await $axios.$get('/reservation/latest/' + EM_ID)
-    return { last }
+    var last = await $axios.$get('/reservation/lastToReturn/' + EM_ID)
+
+    var isDisabled = false
+    if ( !last ) {
+      last = {
+        R_ID: 'ไม่มีรายการจอง',
+        R_TIME_BOOK: 'ไม่มีรายการจอง',
+        car: {
+          C_NAME: 'ไม่มีรายการจอง'
+        }
+      }
+      isDisabled = true
+    }
+
+
+    return { last,isDisabled }
   },
+
+
   data() {
     const now = new Date()
     const myTimeZone = 7
@@ -148,8 +168,33 @@ export default {
       form.append('R_ID', R_ID)
       form.append('R_RETURN_NOTE', this.note)
       form.append('img', this.image)
-      const { data } = await this.$axios.$post('/reservation/return', form)
-      console.log(data)
+      await this.$axios.$post('/reservation/return', form)
+      this.refreshData()
+    },
+
+    async refreshData() {
+      const { EM_ID } = this.$store.getters['Auth/getUser']
+      var last = await this.$axios.$get( '/reservation/lastToReturn/' + EM_ID )
+
+      var isDisabled = false
+      if ( !last ) {
+        last = {
+          R_ID: 'ไม่มีรายการจอง',
+          R_TIME_BOOK: 'ไม่มีรายการจอง',
+          car: {
+            C_NAME: 'ไม่มีรายการจอง'
+          }
+        }
+        isDisabled = true
+      }
+
+      this.last = last
+      this.isDisabled = isDisabled
+
+      // clear form
+      this.$refs.file.reset()
+      this.$refs.comment.reset()
+
     },
   },
 }

@@ -5,6 +5,10 @@
         mdi-account-credit-card
       </v-icon>
       <h1>ชำระเงิน</h1>
+      <v-spacer></v-spacer>
+      <div class="mr-3 my-auto title">
+        ยอดค้างชำระ : {{ fine }} บาท
+      </div>
     </div>
     <v-divider class=""></v-divider>
 
@@ -43,6 +47,7 @@
                     accept="image/png, image/jpeg, image/bmp"
                     label="อัพโหลดหลักฐานการชำระเงิน"
                     v-model="payImg"
+                    :disabled="isDisable"
                   ></v-file-input>
                 </client-only>
               </v-col>
@@ -66,6 +71,7 @@
                       readonly
                       v-bind="attrs"
                       v-on="on"
+                      :disabled="isDisable"
                     ></v-text-field>
                   </template>
                   <v-time-picker
@@ -76,6 +82,7 @@
                     scrollable
                     color="#2c3639"
                     @click:minute="$refs.payTimeMenu.save(payTime)"
+                    :disabled="isDisable"
                   ></v-time-picker>
                 </v-menu>
               </v-col>
@@ -99,6 +106,7 @@
                       readonly
                       v-bind="attrs"
                       v-on="on"
+                      :disabled="isDisable"
                     ></v-text-field>
                   </template>
                   <v-date-picker
@@ -107,26 +115,31 @@
                     scrollable
                     landscape
                     color="#2c3639"
+                    :disabled="isDisable"
                   ></v-date-picker>
                 </v-menu>
               </v-col>
               <v-col cols="6">
                 <v-text-field
+                  ref="payAmount"
                   v-model="payAmount"
                   label="จำนวนเงินที่ชำระ"
                   prepend-icon="mdi-cash"
                   type="number"
+                  :disabled="isDisable"
                 ></v-text-field>
               </v-col>
             </v-row>
 
             <v-row cols="12" class="mt-4 mx-3">
               <v-textarea
+                ref="payNote"
                 color="#2c3639"
                 label="หมายเหตุ"
                 outlined
                 placeholder="หมายเหตุ"
                 v-model="payNote"
+                :disabled="isDisable"
               ></v-textarea>
             </v-row>
           </v-card-text>
@@ -136,7 +149,7 @@
               >เมื่อชำระเงินแล้ว โปรดรอเจ้าหน้าที่ยืนยันข้อมูล</span
             >
             <v-spacer></v-spacer>
-            <v-btn color="primary" text @click="submitDialog = true"
+            <v-btn color="primary" text @click="submitDialog = true" :disabled="(!payImg || !payTime || !payDate || !payAmount || !payNote)"
               >ยืนยัน</v-btn
             >
           </v-card-actions>
@@ -147,9 +160,15 @@
 </template>
 <script>
 export default {
-  asyncData({ store }) {
-    store.dispatch('Auth/setAuthTrue')
+  async asyncData( { store,$axios } ) {
+    store.dispatch( 'Auth/setAuthTrue' )
+    const { EM_ID } = await store.getters['Auth/getUser']
+    const fine = await $axios.$get( `/employee/${ EM_ID }/fine` )
+    var isDisable = false
+    if ( fine <= 0 ) isDisable = true
+    return { fine , isDisable }
   },
+
 
   data() {
     return {
@@ -177,7 +196,7 @@ export default {
       form.append('PM_TIME', payDateTime)
       form.append('PM_AMOUNT', this.payAmount)
       form.append('PM_NOTE', this.payNote)
-      form.append('EM_ID', await this.$store.state.Auth.user.EM_ID)
+      form.append('EM_ID', await this.$store.getters['Auth/getUser'].EM_ID)
       form.append('img', this.payImg)
 
       await this.$axios.post('/payment', form, {
@@ -187,7 +206,6 @@ export default {
       })
 
       this.$router.push('/')
-
       // this.$router.push('/dashboard')
     },
   },

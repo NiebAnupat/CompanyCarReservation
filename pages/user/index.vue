@@ -16,24 +16,16 @@
           <p
             class="my-auto title"
             :class="
-              last.R_STATUS == 'P'
-                ? 'purple--text text--accent-3'
-                : last.R_STATUS == 'T'
-                ? 'green--text text--accent-4'
-                : 'red--text text--accent-3'
+             getLastColorText(last.R_STATUS)
             "
           >
             {{
-              last.R_STATUS == 'P'
-                ? 'รออนุมิติ'
-                : last.R_STATUS == 'T'
-                  ? 'อนุมัติแล้ว'
-                  : 'ไม่อนุมิติ'
+              getStatusText( last.R_STATUS )
             }}
           </p>
           <v-spacer></v-spacer>
           <v-card-actions>
-            <v-btn text class="white--text" @click="checkDetail(last)"
+            <v-btn text class="white--text" :disabled="last.R_STATUS == '_' ? true : false" @click="checkDetail(last)"
             >ดูรายละเอียด
             </v-btn
             >
@@ -103,7 +95,7 @@
                   <v-icon class="mr-2" color="white">{{
                       item.R_STATUS == 'P'
                         ? 'mdi-clock'
-                        : item.status == 'T'
+                        : item.R_STATUS == 'T'
                           ? 'mdi-check'
                           : 'mdi-close'
                     }}
@@ -196,9 +188,12 @@ export default {
     store.dispatch( 'Auth/setAuthTrue' )
     const { EM_ID } = await store.getters['Auth/getUser']
     const recent = await $axios.$get( '/reservation/recent/' + EM_ID )
-    const last = await $axios.$get( '/reservation/latest/' + EM_ID )
+    var last = await $axios.$get( '/reservation/latest/' + EM_ID )
     const fine = await $axios.$get( `/employee/${ EM_ID }/fine` )
     const favoriteCars = await $axios.$get( `/car/favoritecar/${ EM_ID }/` )
+    if ( !last ) {
+      last = { R_STATUS : '_' }
+    }
     return { recent, last, fine, favoriteCars }
   },
   data() {
@@ -273,6 +268,32 @@ export default {
           return 'red accent-3'
         default:
           return 'black'
+      }
+    },
+
+    getStatusText( status ) {
+      switch ( status ) {
+        case 'P':
+          return 'รออนุมัติ'
+        case 'T':
+          return 'อนุมัติ'
+        case 'F':
+          return 'ไม่อนุมัติ'
+        default:
+          return 'ไม่พบการจอง'
+      }
+    },
+
+    getLastColorText( status ) {
+      switch ( status ) {
+        case 'P':
+          return 'purple--text text--accent-3'
+        case 'T':
+          return 'green--text text--accent-4'
+        case 'F':
+          return 'red--text text--accent-3'
+        default:
+          return 'red--text text--accent-3'
       }
     },
 
