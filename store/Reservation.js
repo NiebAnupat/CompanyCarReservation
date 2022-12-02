@@ -37,14 +37,30 @@ export const actions = {
     commit('setSelected', data)
     commit('setLoading', false)
   },
+
+  async setSelected({ commit }, reservation) {
+    console.log(reservation)
+    commit('setSelected', reservation)
+  },
   async create({ commit }, payload) {
     commit('setLoading', true)
-    await this.$axios.post('/reservations', payload)
-    commit('setLoading', false)
+    this.$axios
+      .post('/reservation', payload)
+      .then((result) => {
+        if (result.status === 200) {
+          this.$router.push('/user')
+          commit('setLoading', false)
+        } else {
+          this.$router.push('/error')
+        }
+      })
+      .catch((err) => {
+        console.log(err)
+      })
   },
   async update({ commit }, payload) {
     commit('setLoading', true)
-    await this.$axios.put(`/reservations/${payload.id}`, payload)
+    await this.$axios.put(`/reservation/${payload.id}`, payload)
     commit('setLoading', false)
   },
   async delete({ commit }, id) {

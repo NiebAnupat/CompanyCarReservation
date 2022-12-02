@@ -176,6 +176,7 @@ export default {
   methods: {
     logout() {
       this.$store.dispatch('Auth/setAdminFalse')
+      // this.$store.dispatch('Auth/setClearUser')
       this.$router.push('/')
     },
   },

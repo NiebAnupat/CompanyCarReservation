@@ -42,7 +42,7 @@
           color="#3F4E4F"
           block
           x-large
-          v-on:click="login"
+          @click="login"
         >
           <v-icon class="mr-2">mdi-location-enter</v-icon>
           เข้าสู่ระบบ</v-btn
@@ -57,7 +57,23 @@ export default {
   name: 'Index',
   layout: 'default',
 
+  asyncData({
+    isDev,
+    route,
+    store,
+    env,
+    params,
+    query,
+    req,
+    res,
+    redirect,
+    error,
+  }) {
+    // store.dispatch('Car/fetchCars')
+  },
+
   mounted() {
+    this.$store.dispatch('Car/fetchCars')
     setTimeout(() => {
       this.$store.dispatch('Auth/setAuthFalse')
     }, 250)
@@ -77,6 +93,22 @@ export default {
         await this.$store.dispatch('Auth/setAdminTrue')
         this.$router.push('admin/')
       } else this.$router.push('user/')
+
+      // await this.$axios
+      //   .$post('/auth', {
+      //     EM_ID: this.username,
+      //     EM_ID_CARD: this.password,
+      //   })
+      //   .then((res) => {
+      //     if (res) {
+      //       this.$store.dispatch('Auth/setAuthTrue')
+      //       this.$store.dispatch('Auth/setUser', res)
+      //       if (this.username == 'admin') {
+      //         this.$store.dispatch('Auth/setAdminTrue')
+      //         this.$router.push('admin/')
+      //       } else this.$router.push('user/')
+      //     }
+      //   })
     },
   },
 }

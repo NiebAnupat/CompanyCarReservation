@@ -1,7 +1,7 @@
 <template>
   <div class="">
     <div class="d-flex">
-      <v-icon class="mr-3 mb-4" size="35" color="blue"> mdi-history </v-icon>
+      <v-icon class="mr-3 mb-4" size="35" color="blue"> mdi-history</v-icon>
       <h1>ประวัติการจอง</h1>
       <v-spacer></v-spacer>
       <v-spacer></v-spacer>
@@ -19,20 +19,32 @@
 
     <v-data-table
       :headers="headers"
-      :items="history"
+      :items="reservations"
       :items-per-page="10"
       :search="search"
       class="elevation-1 rounded-md"
       no-data-text="ไม่มีข้อมูลการใช้งานรถ"
       no-results-text="ไม่พบข้อมูลที่ค้นหา"
     >
+      <template v-slot:item.R_DATE_BOOK="{ item }">
+        <div>
+          {{ formatDate( item.R_TIME_BOOK ) }}
+        </div>
+      </template>
+
+      <template v-slot:item.R_TIME_BOOK="{ item }">
+        <div>
+          {{ formatTime( item.R_TIME_BOOK ) }}
+        </div>
+      </template>
+
       <!-- Chip -->
-      <template v-slot:item.status="{ item }">
+      <template v-slot:item.R_STATUS="{ item }">
         <v-chip
           :color="
-            item.status == 'รออนุมัติ'
+            item.R_STATUS == 'P'
               ? 'purple accent-3'
-              : item.status == 'อนุมัติ'
+              : item.R_STATUS == 'T'
               ? 'green accent-4'
               : 'red accent-3'
           "
@@ -40,15 +52,29 @@
         >
           <v-icon class="mr-1">
             {{
-              item.status == 'รออนุมัติ'
+              item.R_STATUS == 'P'
                 ? 'mdi-clock'
-                : item.status == 'อนุมัติ'
-                ? 'mdi-check'
-                : 'mdi-close'
+                : item.R_STATUS == 'T'
+                  ? 'mdi-check'
+                  : 'mdi-close'
             }}
           </v-icon>
-          <span v-text="item.status"></span>
+          <span>
+            {{
+              item.R_STATUS == 'P'
+                ? 'รออนุมัติ'
+                : item.R_STATUS == 'T'
+                  ? 'อนุมัติ'
+                  : 'ไม่อนุมัติ'
+            }}
+          </span>
         </v-chip>
+      </template>
+
+      <template v-slot:item.C_NAME="{ item }">
+        <div>
+          {{ item.car.C_NAME }}
+        </div>
       </template>
 
       <!-- Action -->
@@ -61,8 +87,8 @@
               icon
               color="primary"
               class="mr-2"
-              @click="showDetail(item)"
-              :disabled="item.status == 'รออนุมัติ'"
+              @click="setSelectReservation(item)"
+              :disabled="item.R_STATUS == 'P'"
             >
               <v-icon>mdi-book-search</v-icon>
             </v-btn>
@@ -80,41 +106,41 @@
     <!-- dialog -->
     <v-dialog v-model="dialog" max-width="800px">
       <v-card>
-        <v-card-title class="headline"> รายละเอียดการจอง </v-card-title>
+        <v-card-title class="headline"> รายละเอียดการจอง</v-card-title>
         <v-card-text>
           <v-container>
             <v-row>
               <v-col cols="8">
                 <v-text-field
-                  v-model="detail.car"
+                  v-model="selected.C_NAME"
                   label="รถที่ยืม"
                   readonly
                 ></v-text-field>
               </v-col>
               <v-col cols="4">
                 <v-text-field
-                  v-model="detail.date"
+                  v-model="selected.R_DATE_BOOK"
                   label="วันที่"
                   readonly
                 ></v-text-field>
               </v-col>
               <v-col cols="4">
                 <v-text-field
-                  v-model="detail.time"
+                  v-model="selected.R_TIME_BOOK"
                   label="เวลายืม"
                   readonly
                 ></v-text-field>
               </v-col>
               <v-col cols="4">
                 <v-text-field
-                  v-model="detail.returnDate"
+                  v-model="selected.R_DATE_RETURN"
                   label="วันที่ต้องการคืน"
                   readonly
                 ></v-text-field>
               </v-col>
               <v-col cols="4">
                 <v-text-field
-                  v-model="detail.returnTime"
+                  v-model="selected.R_TIME_RETURN"
                   label="เวลาที่ต้องการคืน"
                   readonly
                 ></v-text-field>
@@ -122,28 +148,28 @@
 
               <v-col cols="4">
                 <v-text-field
-                  v-model="detail.status"
+                  v-model="selected.R_STATUS"
                   label="สถานะ"
                   readonly
                 ></v-text-field>
               </v-col>
               <v-col cols="4">
                 <v-text-field
-                  v-model="detail.returnedDate"
+                  v-model="selected.R_DATE_RETURNED"
                   label="วันที่คืน"
                   readonly
                 ></v-text-field>
               </v-col>
               <v-col cols="4">
                 <v-text-field
-                  v-model="detail.returnedTime"
+                  v-model="selected.R_TIME_RETURNED"
                   label="เวลาที่คืน"
                   readonly
                 ></v-text-field>
               </v-col>
               <v-col cols="12">
                 <v-text-field
-                  v-model="detail.fine"
+                  v-model="selected.R_FINE"
                   label="ค่าปรับ"
                   readonly
                 ></v-text-field>
@@ -152,7 +178,7 @@
             <v-row>
               <v-col cols="12">
                 <v-textarea
-                  v-model="detail.reason"
+                  v-model="selected.R_DESCRIPTION"
                   label="เหตุผล"
                   readonly
                   outlined
@@ -162,7 +188,7 @@
               </v-col>
               <v-col cols="12">
                 <v-textarea
-                  v-model="detail.note"
+                  v-model="selected.R_ADMIN_NOTE"
                   label="หมายเหตุ"
                   readonly
                   outlined
@@ -186,78 +212,149 @@
 
 <script>
 export default {
-  name: 'history',
-  asyncData({ store }) {
-    store.dispatch('Auth/setAuthTrue')
-    const history = store.getters['History/getHistory']
-    return { history }
+  name : 'history',
+  async asyncData( { store, $axios } ) {
+    await store.dispatch( 'Auth/setAuthTrue' )
+    await store.dispatch( 'Car/fetchCars' )
+    const { EM_ID } = store.getters['Auth/getUser']
+    const reservations = await $axios.$get( `/reservation/${ EM_ID }/all` )
+    return { reservations }
   },
+
+  created() {
+    const select = this.$store.getters['Reservation/selected']
+    if ( select ) {
+      this.selected = {
+        R_ID : select.R_ID,
+        R_DATE_BOOK : this.formatDate( select.R_TIME_BOOK ),
+        R_TIME_BOOK : this.formatTime( select.R_TIME_BOOK ),
+        R_DATE_RETURN : this.formatDate( select.R_TIME_RETURN ),
+        R_TIME_RETURN : this.formatTime( select.R_TIME_RETURN ),
+        R_DATE_RETURNED : this.formatDate( select.R_TIME_RETURNED ) || '-',
+        R_TIME_RETURNED : this.formatTime( select.R_TIME_RETURNED ) || '-',
+        C_NAME : select.car.C_NAME,
+        R_STATUS : this.getStatusText( select.R_STATUS ),
+        R_FINE : select.R_FINE || '-',
+        R_DESCRIPTION : select.R_DESCRIPTION,
+        R_ADMIN_NOTE : select.R_ADMIN_NOTE || '-',
+      }
+      this.showDetail()
+    }
+  },
+
   data() {
     return {
-      search: '',
-      dialog: false,
-      headers: [
+      search : '',
+      dialog : false,
+      headers : [
         {
-          text: 'วันที่จอง',
-          value: 'date',
-          align: 'center',
-          type: 'date',
-          width: '10%',
-          class: 'text-center',
+          text : 'วันที่จอง',
+          value : 'R_DATE_BOOK',
+          align : 'center',
+          type : 'date',
+          width : '10%',
+          class : 'text-center',
         },
         {
-          text: 'เวลา',
-          value: 'time',
-          align: 'center',
-          type: 'time',
-          width: '10%',
-          class: 'text-center',
+          text : 'เวลา',
+          value : 'R_TIME_BOOK',
+          align : 'center',
+          type : 'time',
+          width : '10%',
+          class : 'text-center',
         },
         {
-          text: 'ชื่อรถ',
-          value: 'car',
-          align: 'start',
-          width: '40%',
-          class: 'text-center',
+          text : 'ชื่อรถ',
+          value : 'C_NAME',
+          align : 'start',
+          width : '40%',
+          class : 'text-center',
         },
         {
-          text: 'สถานะ',
-          value: 'status',
-          align: 'start',
-          width: '10%',
-          divider: true,
-          class: 'text-center',
+          text : 'สถานะ',
+          value : 'R_STATUS',
+          align : 'start',
+          width : '10%',
+          divider : true,
+          class : 'text-center',
         },
         {
-          text: 'ดำเนินการ',
-          value: 'action',
-          align: 'center',
-          sortable: false,
-          width: '10%',
+          text : 'ดำเนินการ',
+          value : 'action',
+          align : 'center',
+          sortable : false,
+          width : '10%',
         },
       ],
-
-      history: [],
-
-      detail: {
-        date: '12/12/2020',
-        time: '09:30',
-        returnDate: '1/1/2021',
-        returnTime: '10:30',
-        returnedDate: '1/1/2021',
-        returnedTime: '10:30',
-        fine: '0',
-        car: 'รถ 1',
-        status: 'รออนุมัติ',
-        reason: 'จองรถเพื่อไปเที่ยว',
-        note: 'ไม่อนุมัติเพราะไม่มีรถ',
+      selected : {
+        R_ID : '',
+        R_DATE_BOOK : '',
+        R_TIME_BOOK : '',
+        R_DATE_RETURN : '',
+        R_TIME_RETURN : '',
+        R_DATE_RETURNED : '',
+        R_TIME_RETURNED : '',
+        C_NAME : '',
+        R_STATUS : '',
+        R_FINE : '',
+        R_DESCRIPTION : '',
+        R_Admin_Note : '',
       },
     }
   },
-  methods: {
-    showDetail(item) {
-      this.detail = item
+  methods : {
+    showDetail() {
       this.dialog = true
+      // clear selected
+      this.$store.dispatch( 'Reservation/setSelected', null )
+    },
+
+    formatDate( date ) {
+      // dd/mm/yyyy
+      const d = new Date( date )
+      const year = d.getFullYear()
+      const month = d.getMonth() + 1
+      const day = d.getDate()
+      return `${ day }/${ month }/${ year }`
+    },
+
+    formatTime( time ) {
+      const t = new Date( time )
+      return t.toLocaleTimeString( 'th-TH', {
+        hour : '2-digit',
+        minute : '2-digit',
+      } )
+    },
+
+
+    setSelectReservation( item ) {
+      console.log( item )
+      this.selected = {
+        R_ID : item.R_ID,
+        R_DATE_BOOK : this.formatDate( item.R_TIME_BOOK ),
+        R_TIME_BOOK : this.formatTime( item.R_TIME_BOOK ),
+        R_DATE_RETURN : this.formatDate( item.R_TIME_RETURN ),
+        R_TIME_RETURN : this.formatTime( item.R_TIME_RETURN ),
+        R_DATE_RETURNED : this.formatDate( item.R_TIME_RETURNED ),
+        R_TIME_RETURNED : this.formatTime( item.R_TIME_RETURNED ),
+        C_NAME : item.car.C_NAME,
+        R_STATUS : this.getStatusText( item.R_STATUS ),
+        R_FINE : item.R_FINE || '-',
+        R_DESCRIPTION : item.R_DESCRIPTION || '-',
+        R_ADMIN_NOTE : item.R_ADMIN_NOTE || '-',
+      }
+      this.showDetail()
+    },
+
+    getStatusText( status ) {
+      switch ( status ) {
+        case 'P':
+          return 'รออนุมัติ'
+        case 'T':
+          return 'อนุมัติ'
+        case 'F':
+          return 'ไม่อนุมัติ'
+      }
     },
   },
 }

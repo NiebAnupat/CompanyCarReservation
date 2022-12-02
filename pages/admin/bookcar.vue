@@ -25,20 +25,34 @@
         <v-card-text>
           <v-data-table
             :headers="headers"
-            :items="pendingBookings"
+            :items="pendingReservations"
             :items-per-page="10"
             :search="search"
+            ref="dataTable"
             class="elevation-1"
             no-data-text="ไม่มีข้อมูลการจอง"
             no-results-text="ไม่พบข้อมูลที่ค้นหา"
           >
+
+            <template v-slot:item.R_BOOK_DATE="{item}">
+              <div>
+                {{ formatDate( item.R_TIME_BOOK ) }}
+              </div>
+            </template>
+
+            <template v-slot:item.R_BOOK_TIME="{item}">
+              <div>
+                {{ formatTime( item.R_TIME_BOOK ) }}
+              </div>
+            </template>
+
             <!-- Chip -->
-            <template v-slot:item.status="{ item }">
+            <template v-slot:item.R_STATUS="{ item }">
               <v-chip
                 :color="
-                  item.status == 'รออนุมัติ'
+                  item.R_STATUS == 'P'
                     ? 'purple accent-3'
-                    : item.status == 'อนุมัติ'
+                    : item.status == 'T'
                     ? 'green accent-4'
                     : 'red accent-3'
                 "
@@ -46,14 +60,16 @@
               >
                 <v-icon class="mr-1">
                   {{
-                    item.status == 'รออนุมัติ'
+                    item.R_STATUS == 'P'
                       ? 'mdi-clock'
-                      : item.status == 'อนุมัติ'
-                      ? 'mdi-check'
-                      : 'mdi-close'
+                      : item.R_STATUS == 'T'
+                        ? 'mdi-check'
+                        : 'mdi-close'
                   }}
                 </v-icon>
-                <span v-text="item.status"></span>
+                <span>
+                  {{ getStatusText( item.R_STATUS ) }}
+                </span>
               </v-chip>
             </template>
 
@@ -66,7 +82,7 @@
                     icon
                     color="primary"
                     class="mr-2"
-                    @click="dialog = true"
+                    @click="showDetail(item)"
                   >
                     <v-icon>mdi-book-search</v-icon>
                   </v-btn>
@@ -84,7 +100,7 @@
                     icon
                     color="primary"
                     class="mr-2"
-                    @click="noteDialog = true"
+                    @click="showAdminNote(item)"
                   >
                     <v-icon>mdi-comment-text-outline</v-icon>
                   </v-btn>
@@ -125,10 +141,10 @@
         </v-card-text>
       </v-card>
     </v-col>
-    <!-- dialog -->
+    <!-- Detail dialog -->
     <v-dialog v-model="dialog" max-width="800px">
       <v-card class="pa-2">
-        <v-card-title class="headline"> รายละเอียด </v-card-title>
+        <v-card-title class="headline"> รายละเอียด</v-card-title>
         <v-card-text>
           <v-container>
             <p class="subtitle-2">ผู้จอง</p>
@@ -223,13 +239,13 @@
     <!-- Note Dialog -->
     <v-dialog v-model="noteDialog" max-width="600px">
       <v-card class="rounded-xl pa-1">
-        <v-card-title class="headline"> หมายเหตุ </v-card-title>
+        <v-card-title class="headline"> หมายเหตุ</v-card-title>
         <v-card-text>
           <v-container>
             <v-row>
               <v-col cols="12">
                 <v-textarea
-                  v-model="adminNote"
+                  v-model="R_ADMIN_NOTE"
                   label="หมายเหตุ"
                   outlined
                   rows="3"
@@ -244,7 +260,7 @@
           <v-btn color="blue darken-1" text @click="noteDialog = false">
             ปิด
           </v-btn>
-          <v-btn color="blue darken-1" text @click="addNote"> บันทึก </v-btn>
+          <v-btn color="blue darken-1" text @click="addNote"> บันทึก</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -252,131 +268,165 @@
 </template>
 <script>
 export default {
-  asyncData({ store }) {
-    store.dispatch('Auth/setAuthTrue')
+  async asyncData( { store, $axios } ) {
+    store.dispatch( 'Auth/setAuthTrue' )
+    const pendingReservations = await $axios.$get( '/reservation/pending' )
+    return {
+      pendingReservations
+    }
   },
 
   data() {
     return {
-      dialog: false,
-      noteDialog: false,
-      search: '',
-      adminNote: '',
-      pendingBookings: [
+      dialog : false,
+      noteDialog : false,
+      search : '',
+      selectedR_ID : '',
+      R_ADMIN_NOTE : '',
+      headers : [
         {
-          id: 1,
-          date: '2020-01-01',
-          car: 'รถยนต์ 1',
-          time: '08:00',
-          status: 'รออนุมัติ',
+          text : 'รหัสการจอง',
+          sortable : true,
+          value : 'R_ID',
+          align : 'center',
+          width : '11%',
+          class : 'text-center',
         },
         {
-          id: 2,
-          date: '2020-01-01',
-          car: 'รถยนต์ 2',
-          time: '08:00',
-          status: 'รออนุมัติ',
+          text : 'วันที่',
+          value : 'R_BOOK_DATE',
+          type : 'date',
+          align : 'center',
+          width : '12%',
         },
         {
-          id: 3,
-          date: '2020-01-07',
-          car: 'รถยนต์ 3',
-          time: '08:00',
-          status: 'รออนุมัติ',
+          text : 'เวลา',
+          value : 'R_BOOK_TIME',
+          align : 'center',
+          width : '8%',
+          sortable : false,
         },
         {
-          id: 4,
-          date: '2020-01-06',
-          car: 'รถยนต์ 4',
-          time: '08:00',
-          status: 'รออนุมัติ',
+          text : 'ชื่อรถ',
+          value : 'car.C_NAME',
+          class : 'text-center',
         },
         {
-          id: 5,
-          date: '2020-01-05',
-          car: 'รถยนต์ 5',
-          time: '08:00',
-          status: 'รออนุมัติ',
+          text : 'สถานะ',
+          value : 'R_STATUS',
+          sortable : false,
+          align : 'left',
+          width : '10%',
+          class : 'text-center',
+          divider : true,
+        },
+
+        {
+          text : 'รายละเอียด',
+          value : 'detail',
+          align : 'center',
+          width : '9%',
+          sortable : false,
+          class : 'text-center',
+        },
+        {
+          text : 'การจัดการ',
+          value : 'action',
+          align : 'center',
+          sortable : false,
+          width : '16%',
         },
       ],
-
-      detail: {
-        emId: '6400922',
-        name: 'นายอนุภัทร',
-        surname: 'แก้วมี',
-        date: '12/12/2020',
-        time: '09:30',
-        returnDate: '1/1/2021',
-        returnTime: '10:30',
-        car: 'รถ 1',
-        reason: 'จองรถเพื่อไปเที่ยว',
+      detail : {
+        emId : '',
+        name : '',
+        surname : '',
+        date : '',
+        time : '',
+        returnDate : '',
+        returnTime : '',
+        car : '',
+        reason : '',
       },
-
-      headers: [
-        {
-          text: 'รหัสการจอง',
-          align: 'start',
-          sortable: true,
-          value: 'id',
-          align: 'center',
-          width: '11%',
-          class: 'text-center',
-        },
-        {
-          text: 'วันที่จอง',
-          value: 'date',
-          type: 'date',
-          align: 'center',
-          width: '12%',
-        },
-        {
-          text: 'เวลา',
-          value: 'time',
-          align: 'center',
-          width: '8%',
-          sortable: false,
-        },
-        {
-          text: 'ชื่อรถ',
-          value: 'car',
-          class: 'text-center',
-        },
-        {
-          text: 'สถานะ',
-          value: 'status',
-          sortable: false,
-          align: 'left',
-          width: '10%',
-          class: 'text-center',
-          divider: true,
-        },
-
-        {
-          text: 'รายละเอียด',
-          value: 'detail',
-          align: 'center',
-          width: '9%',
-          sortable: false,
-          class: 'text-center',
-        },
-        {
-          text: 'การจัดการ',
-          value: 'action',
-          align: 'center',
-          sortable: false,
-          width: '16%',
-        },
-      ],
     }
   },
 
-  methods: {
-    approveBooking(item) {},
+  methods : {
+    async approveBooking( item ) {
+      const R_ID = item.R_ID
+      await this.$axios.put( `/reservation/approve/${ R_ID }` )
+      this.refreshData()
+    },
 
-    rejectBooking(item) {},
+    async rejectBooking( item ) {
+      const R_ID = item.R_ID
+      await this.$axios.put( `/reservation/reject/${ R_ID }` )
+      this.refreshData()
+    },
 
-    addNote() {
+    showAdminNote( item ) {
+      this.selectedR_ID = item.R_ID
+      this.R_ADMIN_NOTE = item.R_ADMIN_NOTE
+      this.noteDialog = true
+    },
+
+    async addNote() {
+      await this.$axios.put( `/reservation/admin-note/${ this.selectedR_ID }`, {
+        R_ADMIN_NOTE : this.R_ADMIN_NOTE
+      } )
       this.noteDialog = false
+      this.refreshData()
+    },
+    showDetail( item ) {
+      this.detail = {
+        emId : item.employee.EM_ID,
+        name : item.employee.EM_FNAME,
+        surname : item.employee.EM_LNAME,
+        date : this.formatDate( item.R_TIME_BOOK ),
+        time : this.formatTime( item.R_TIME_BOOK ),
+        returnDate : this.formatDate( item.R_TIME_RETURN ),
+        returnTime : this.formatTime( item.R_TIME_RETURN ),
+        car : item.car.C_NAME,
+        reason : item.R_DESCRIPTION,
+      }
+      this.dialog = true
+    },
+
+    formatDate( date ) {
+      // dd/mm/yyyy
+      const d = new Date( date )
+      const year = d.getFullYear()
+      const month = d.getMonth() + 1
+      const day = d.getDate()
+      return `${ day }/${ month }/${ year }`
+    },
+
+    formatTime( time ) {
+      const t = new Date( time )
+      return t.toLocaleTimeString( 'th-TH', {
+        hour : '2-digit',
+        minute : '2-digit',
+      } )
+    },
+    getStatusText( status ) {
+      switch ( status ) {
+        case 'P':
+          return 'รออนุมัติ'
+        case 'T':
+          return 'อนุมัติ'
+        case 'F':
+          return 'ไม่อนุมัติ'
+      }
+    },
+
+    refreshData() {
+      this.$axios.$get( '/reservation/pending' ).then(  res  => {
+        this.pendingReservations = res
+      } )
+    },
+
+    refreshTable() {
+      // this.$refs.dataTable.
     },
   },
 }

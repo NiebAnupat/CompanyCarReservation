@@ -42,6 +42,7 @@
                     truncate-length="50"
                     accept="image/png, image/jpeg, image/bmp"
                     label="อัพโหลดหลักฐานการชำระเงิน"
+                    v-model="payImg"
                   ></v-file-input>
                 </client-only>
               </v-col>
@@ -104,7 +105,7 @@
                     v-model="payDate"
                     @input="payDatePicker = false"
                     scrollable
-                    landscape="true"
+                    landscape
                     color="#2c3639"
                   ></v-date-picker>
                 </v-menu>
@@ -161,12 +162,33 @@ export default {
       payDatePicker: false,
       payAmount: null,
       payNote: null,
+      payImg: null,
     }
   },
 
   methods: {
-    submit() {
-      this.$router.push('/dashboard')
+    async submit() {
+      var form = new FormData()
+      // combine time and date
+      var payDateTime = new Date(
+        this.payDate + ' ' + this.payTime
+      ).toISOString()
+
+      form.append('PM_TIME', payDateTime)
+      form.append('PM_AMOUNT', this.payAmount)
+      form.append('PM_NOTE', this.payNote)
+      form.append('EM_ID', await this.$store.state.Auth.user.EM_ID)
+      form.append('img', this.payImg)
+
+      await this.$axios.post('/payment', form, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      })
+
+      this.$router.push('/')
+
+      // this.$router.push('/dashboard')
     },
   },
 }

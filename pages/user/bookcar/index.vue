@@ -20,7 +20,7 @@
 
     <v-row class="mt-4">
       <v-col md="4" v-for="(car, index) in cars" :key="car.id">
-        <CarCard :car="car" />
+        <CarCard :car="car" :refreshData="refreshData" />
       </v-col>
     </v-row>
   </div>
@@ -29,11 +29,12 @@
 <script>
 export default {
   name: 'bookcar',
-  async asyncData({ store }) {
-    store.dispatch('Auth/setAuthTrue')
-    const cars = await store.getters['Car/getCars']
+  async asyncData({ store, $axios }) {
+    await store.dispatch( 'Auth/setAuthTrue' )
+    const cars = await $axios.$get('/car/all')
     return { cars }
   },
+
   data() {
     return {
       search: '',
@@ -42,6 +43,11 @@ export default {
   methods: {
     searchCar() {
       console.log('search')
+    },
+    refreshData() {
+      this.$axios.$get('/car/all').then((res) => {
+        this.cars = res
+      })
     },
   },
 }

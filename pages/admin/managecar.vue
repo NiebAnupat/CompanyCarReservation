@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="d-flex">
-      <v-icon class="mr-3 mb-2" size="35" color="primary"> mdi-car </v-icon>
+      <v-icon class="mr-3 mb-2" size="35" color="primary"> mdi-car</v-icon>
       <h1>จัดการข้อมูลรถ</h1>
       <v-spacer></v-spacer>
 
@@ -18,7 +18,7 @@
     <v-divider></v-divider>
 
     <v-row class="mt-4">
-      <v-col md="4" v-for="(car, index) in cars" :key="car.id">
+      <v-col md="4" v-for="(car, index) in cars" :key="car.C_ID">
         <AdminCarCard
           :car="car"
           :setEditCar="setEditCar"
@@ -39,7 +39,7 @@
             <v-row>
               <v-col cols="6">
                 <v-text-field
-                  v-model="newCar.name"
+                  v-model="newCar.C_NAME"
                   label="ชื่อรถ"
                   outlined
                   ref="nameRef"
@@ -59,7 +59,7 @@
             <v-row class="mt-n5">
               <v-col cols="12">
                 <v-textarea
-                  v-model="newCar.description"
+                  v-model="newCar.C_DESCRIPTION"
                   label="รายละเอียด"
                   outlined
                   rows="3"
@@ -72,7 +72,7 @@
             <v-row class="mt-n5">
               <v-col cols="12">
                 <v-file-input
-                  v-model="newCar.images"
+                  v-model="newCar.car_img"
                   label="รูปภาพ"
                   outlined
                   show-size
@@ -98,9 +98,9 @@
                 >
                   <div v-if="imgIsExist()">
                     <v-carousel-item
-                      v-for="(image, index) in newCar.images"
+                      v-for="(image, index) in newCar.car_img"
                       :key="index"
-                      :src="toImgUrl(image)"
+                      :src="getImg(image)"
                     >
                     </v-carousel-item>
                   </div>
@@ -126,12 +126,11 @@
             text
             @click="
               addCarDialog = false
-              clearNewCar
             "
           >
             ยกเลิก
           </v-btn>
-          <v-btn color="blue darken-1" text @click="addCar"> เพิ่ม </v-btn>
+          <v-btn color="blue darken-1" text @click="addCar"> เพิ่ม</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -148,7 +147,7 @@
             <v-row>
               <v-col cols="6">
                 <v-text-field
-                  v-model="editCar.name"
+                  v-model="editCar.C_NAME"
                   label="ชื่อรถ"
                   outlined
                   :rules="[(v) => !!v || 'กรุณากรอกชื่อรถ']"
@@ -156,7 +155,7 @@
               </v-col>
               <v-col cols="6">
                 <v-select
-                  v-model="editCar.level"
+                  v-model="editCar.C_LEVEL"
                   :items="carLevel"
                   label="ระดับการเข้าถึง"
                   :menu-props="{ offsetY: true }"
@@ -167,7 +166,7 @@
             <v-row class="mt-n5">
               <v-col cols="12">
                 <v-textarea
-                  v-model="editCar.description"
+                  v-model="editCar.C_DESCRIPTION"
                   label="รายละเอียด"
                   outlined
                   rows="3"
@@ -179,7 +178,7 @@
             <v-row class="mt-n5">
               <v-col cols="12">
                 <v-file-input
-                  v-model="editCar.images"
+                  v-model="editCar.car_img"
                   label="รูปภาพ"
                   outlined
                   show-size
@@ -204,9 +203,9 @@
                 >
                   <div v-if="editImgIsExist()">
                     <v-carousel-item
-                      v-for="(image, index) in editCar.images"
+                      v-for="(image, index) in editCar.car_img"
                       :key="index"
-                      :src="typeof image == 'object' ? toImgUrl(image) : image"
+                      :src="getImg(image)"
                     >
                     </v-carousel-item>
                   </div>
@@ -230,7 +229,7 @@
           <v-btn color="blue darken-1" text @click="editCarDialog = false">
             ยกเลิก
           </v-btn>
-          <v-btn color="blue darken-1" text @click="updateCar()"> แก้ไข </v-btn>
+          <v-btn color="blue darken-1" text @click="updateCar"> แก้ไข</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -238,61 +237,77 @@
 </template>
 <script>
 export default {
-  async asyncData({ store }) {
-    store.dispatch('Auth/setAuthTrue')
-    store.dispatch('Auth/setAdminTrue')
-    const cars = await store.getters['Car/getCars']
+  async asyncData( { store,$axios } ) {
+    await store.dispatch( 'Auth/setAuthTrue' )
+    await store.dispatch( 'Auth/setAdminTrue' )
+    const cars = await $axios.$get('/car/all')
     return { cars }
   },
 
   data() {
     return {
-      addCarDialog: false,
-      inputRef: null,
-      newCar: {
-        name: '',
-        description: '',
-        images: [],
-        level: '',
+      addCarDialog : false,
+      inputRef : null,
+      newCar : {
+        C_NAME : '',
+        C_DESCRIPTION : '',
+        car_img : [],
+        C_LEVEL : '',
       },
-      carLevel: ['พนักงานทั่วไป', 'ผู้จัดการ', 'ผู้บริหาร'],
-      editCarDialog: false,
-      editCar: {
-        id: '',
-        name: '',
-        description: '',
-        images: [],
-        level: '',
+      carLevel : ['พนักงานทั่วไป', 'ผู้จัดการ', 'ผู้บริหาร'],
+      editCarDialog : false,
+      editCar : {
+        C_ID : '',
+        C_NAME : '',
+        C_DESCRIPTION : '',
+        car_img : [],
+        C_LEVEL : '',
       },
     }
   },
 
-  methods: {
-    addCar() {
-      this.$store.dispatch('Car/addCar', this.newCar)
+  methods : {
+    async addCar() {
+      var formData = new FormData()
+      formData.append( 'C_NAME', this.newCar.C_NAME )
+      formData.append( 'C_DESCRIPTION', this.newCar.C_DESCRIPTION )
+      formData.append( 'C_LEVEL', this.getCarLevelAsInt( this.newCar.C_LEVEL ) )
+      this.newCar.car_img.forEach( ( file ) => {
+        formData.append( 'car_img', file )
+      } )
+      await this.$axios.$post( '/car/', formData )
       this.addCarDialog = false
+      this.refreshData()
     },
 
-    deleteCar(id) {
-      console.log('delete Car id: ' + id)
-      this.$store.dispatch('Car/deleteCar', id)
+    async deleteCar( id ) {
+      await this.$axios.$delete( '/car/' + id )
+      this.refreshData()
     },
 
-    setEditCar(car) {
-      // console.log(car)
-      this.editCar = {
-        id: car.id,
-        name: car.name,
-        description: car.description,
-        images: car.images,
-        level: car.level,
+    setEditCar( car ) {
+       this.editCar = {
+        C_ID : car.C_ID,
+        C_NAME : car.C_NAME,
+        C_DESCRIPTION : car.C_DESCRIPTION,
+        car_img : car.car_img,
+        C_LEVEL : this.getCarLevelAsString( car.C_LEVEL ),
       }
       this.editCarDialog = true
     },
 
-    updateCar() {
-      this.$store.dispatch('Car/updateCar', this.editCar)
+    async updateCar() {
+      var formData = new FormData()
+      formData.append( 'C_ID', this.editCar.C_ID )
+      formData.append( 'C_NAME', this.editCar.C_NAME )
+      formData.append( 'C_DESCRIPTION', this.editCar.C_DESCRIPTION )
+      formData.append( 'C_LEVEL', this.getCarLevelAsInt( this.editCar.C_LEVEL ) )
+      this.editCar.car_img.forEach( ( img ) => {
+        formData.append( 'car_img', img )
+      } )
+      await this.$axios.put( '/car/edit', formData )
       this.editCarDialog = false
+      this.refreshData()
     },
 
     openAddCarDialog() {
@@ -304,15 +319,70 @@ export default {
     },
 
     imgIsExist() {
-      return this.newCar.images.length > 0 ? true : false
+      return this.newCar.car_img.length > 0 ? true : false
     },
 
     editImgIsExist() {
-      return this.editCar.images.length > 0 ? true : false
+      return this.editCar.car_img.length > 0 ? true : false
     },
 
-    toImgUrl(img) {
-      return URL.createObjectURL(img)
+    toImgUrl( img ) {
+      return URL.createObjectURL( img )
+    },
+
+    getImg(img){
+      // check object is file
+      if(img instanceof File){
+        return this.toImgUrl(img)}
+      else{
+        return this.convertBlobToURL(img.IMG_FILE)
+      }
+
+    },
+
+    getCarLevelAsString( level ) {
+     switch ( level ) {
+       case 1:
+         return 'พนักงานทั่วไป'
+       case 2:
+         return 'ผู้จัดการ'
+       case 3:
+         return 'ผู้บริหาร'
+       default:
+         return 'พนักงานทั่วไป'
+     }
+    },
+
+    getCarLevelAsInt( level ) {
+      switch ( level ) {
+        case 'พนักงานทั่วไป':
+          return 1
+        case 'ผู้จัดการ':
+          return 2
+        case 'ผู้บริหาร':
+          return 3
+        default:
+          return 1
+      }
+    },
+
+    convertBlobToURL(blob) {
+      return (
+        'data:image/jpeg;base64,' +
+        new Buffer(
+          new Uint8Array(blob.data).reduce(
+            (data, byte) => data + String.fromCharCode(byte),
+            ''
+          ),
+          'binary'
+        ).toString('base64')
+      )
+    },
+
+    refreshData() {
+      this.$axios.$get('/car/all').then((res) => {
+        this.cars = res
+      })
     },
   },
 }

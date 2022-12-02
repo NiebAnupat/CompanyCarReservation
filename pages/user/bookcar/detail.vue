@@ -9,7 +9,7 @@
           <v-btn color="red darken-1" text @click="dialog = false">
             ยกเลิก
           </v-btn>
-          <v-btn color="primary" text @click="submit"> ยืนยัน </v-btn>
+          <v-btn color="primary" text @click="submit(car.C_ID)"> ยืนยัน </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -20,17 +20,17 @@
         <v-card>
           <v-carousel height="200px">
             <v-carousel-item
-              v-for="(item, i) in car.images"
+              v-for="(item, i) in car.car_img"
               :key="i"
-              :src="item"
+              :src="convertBlobToURL(item.IMG_FILE)"
               reverse-transition="fade-transition"
               transition="fade-transition"
             ></v-carousel-item>
           </v-carousel>
           <v-card-title>
             <div>
-              <div class="headline">{{ car.name }}</div>
-              <div class="subtitle-1 mt-1">{{ car.description }}</div>
+              <div class="headline">{{ car.C_NAME }}</div>
+              <div class="subtitle-1 mt-1">{{ car.C_DESCRIPTION }}</div>
             </div>
           </v-card-title>
         </v-card>
@@ -66,7 +66,7 @@
                   v-model="bookDate"
                   @input="bookDatePicker = false"
                   scrollable
-                  landscape="true"
+                  landscape
                   color="#2c3639"
                 ></v-date-picker>
               </v-menu>
@@ -95,7 +95,7 @@
                   v-model="returnDate"
                   @input="returnDatePicker = false"
                   scrollable
-                  landscape="true"
+                  landscape
                   color="#2c3639"
                 ></v-date-picker>
               </v-menu>
@@ -177,6 +177,7 @@
           <!-- รายละเอียด -->
           <v-row cols="12" class="mt-4 px-10">
             <v-textarea
+              v-model="bookDetail"
               color="#2c3639"
               label="รายละเอียดการจอง"
               hint="เหตุผลประกอบการใช้งาน"
@@ -198,11 +199,11 @@
 export default {
   name: 'bookcar-detail',
   async asyncData({ store }) {
-    store.dispatch('Auth/setAuthTrue')
-    const car = await store.getters['Car/getSelectedCar']
-    console.log(car)
+    await store.dispatch( 'Auth/setAuthTrue' )
+    const car = JSON.parse( localStorage.getItem( 'car' ) )
     return { car }
   },
+
   data() {
     return {
       dialog: false,
@@ -214,12 +215,57 @@ export default {
       returnTimePicker: false,
       bookTime: null,
       returnTime: null,
+      bookDetail: null,
+
+      reservation: {
+        EM_ID: null,
+        C_ID: null,
+        R_DESCRIPTION: null,
+        R_TIME_BOOK: null,
+        R_TIME_RETURN: null,
+      },
     }
   },
 
   methods: {
-    submit() {
-      this.$router.push('/user')
+    async submit(C_ID) {
+      const bookDateTime = this.bookDate + ' ' + this.bookTime
+      const returnDateTime = this.returnDate + ' ' + this.returnTime
+
+      // DateTime as SQL DateTime
+      const bookDateTimeSQL = new Date(bookDateTime).toISOString()
+      const returnDateTimeSQL = new Date(returnDateTime).toISOString()
+      // var moment = require('moment')
+      // const bookDateTimeSQL = moment(bookDateTime).format('YYYY-MM-DD HH:mm:ss')
+      // const returnDateTimeSQL = moment(returnDateTime).format(
+      //   'YYYY-MM-DD HH:mm:ss'
+      // )
+
+      this.reservation = {
+        EM_ID: await this.$store.getters['Auth/getUser'].EM_ID,
+        C_ID: C_ID,
+        R_DESCRIPTION: this.bookDetail,
+        R_TIME_BOOK: bookDateTimeSQL,
+        R_TIME_RETURN: returnDateTimeSQL,
+      }
+
+      console.log(this.reservation)
+      this.$store.dispatch('Reservation/create', this.reservation)
+
+      // this.$router.push('/user')
+    },
+
+    convertBlobToURL(blob) {
+      return (
+        'data:image/jpeg;base64,' +
+        new Buffer(
+          new Uint8Array(blob.data).reduce(
+            (data, byte) => data + String.fromCharCode(byte),
+            ''
+          ),
+          'binary'
+        ).toString('base64')
+      )
     },
   },
 }

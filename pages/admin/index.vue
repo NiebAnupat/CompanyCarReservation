@@ -16,8 +16,8 @@
             class="pa-4 white--text d-flex flex-column align-center"
             color="#2c3639"
           >
-            <v-card-title class="display-2">{{ bookCount }}</v-card-title>
-            <v-card-title> การจองวันนี้ </v-card-title>
+            <v-card-title class="display-2">{{ todayCount }}</v-card-title>
+            <v-card-title> การจองวันนี้</v-card-title>
           </v-card>
         </v-col>
         <v-col cols="4">
@@ -26,7 +26,7 @@
             color="info"
           >
             <v-card-title class="display-2"> {{ checkCount }}</v-card-title>
-            <v-card-title> ตรวจสอบแล้ว </v-card-title>
+            <v-card-title> ตรวจสอบแล้ว</v-card-title>
           </v-card>
         </v-col>
         <v-col cols="4">
@@ -34,8 +34,8 @@
             class="pa-4 white--text d-flex flex-column align-center"
             color="warning"
           >
-            <v-card-title class="display-2">{{ uncheckCount }}</v-card-title>
-            <v-card-title> ยังไม่ได้ตรวจสอบ </v-card-title>
+            <v-card-title class="display-2">{{ pendingCount }}</v-card-title>
+            <v-card-title> ยังไม่ได้ตรวจสอบ</v-card-title>
           </v-card>
         </v-col>
       </v-row>
@@ -61,14 +61,14 @@
       <v-row>
         <v-col cols="6">
           <v-card class="pa-4 d-flex white--text" color="#c90f30">
-            <v-card-title> ยอดชำระค่าปรับ </v-card-title>
+            <v-card-title> ยอดชำระค่าปรับ</v-card-title>
             <v-card-title class="mx-auto">{{ payCount }}</v-card-title>
             <v-card-title class="ml-auto">รายการ</v-card-title>
           </v-card>
         </v-col>
         <v-col cols="6">
           <v-card class="pa-4 d-flex white--text" color="deep-orange darken-1">
-            <v-card-title> ตรวจสอบแล้ว </v-card-title>
+            <v-card-title> ตรวจสอบแล้ว</v-card-title>
             <v-card-title class="mx-auto">{{ payCheckCount }}</v-card-title>
             <v-card-title class="ml-auto">รายการ</v-card-title>
           </v-card>
@@ -91,34 +91,40 @@
 </template>
 <script>
 export default {
-  name: 'index',
+  name : 'index',
+  async asyncData( { store, $axios } ) {
+    store.dispatch( 'Auth/setAuthTrue' )
+    store.dispatch( 'Auth/setAdminTrue' )
 
-  asyncData({ store }) {
-    store.dispatch('Auth/setAuthTrue')
-    store.dispatch('Auth/setAdminTrue')
+    const todayCount = await $axios.$get( '/reservation/count/today' )
+
+    const checkCount = await $axios.$get( '/reservation/count/today/check' )
+
+    const pendingCount = await $axios.$get( '/reservation/count/today/pending' )
+
+    const payCount = await $axios.$get( '/payment/count/today' )
+
+    const payCheckCount = await $axios.$get( '/payment/count/today/checked' )
+
+    return { todayCount, checkCount, pendingCount, payCount, payCheckCount }
+
   },
 
   data() {
-    return {
-      bookCount: 10,
-      checkCount: 4,
-      uncheckCount: 6,
-      payCount: 3,
-      payCheckCount: 2,
-    }
+    return {}
   },
 
-  methods: {
+  methods : {
     navigateBookCar() {
-      this.$router.push('/admin/bookcar')
+      this.$router.push( '/admin/bookcar' )
     },
 
     navigatePayment() {
-      this.$router.push('/admin/payment')
+      this.$router.push( '/admin/payment' )
     },
 
     navigateReport() {
-      this.$router.push('/admin/report')
+      this.$router.push( '/admin/report' )
     },
   },
 }

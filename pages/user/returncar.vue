@@ -12,9 +12,9 @@
         <v-col cols="4">
           <v-text-field
             label="รหัสการจอง"
+            :value="last.R_ID"
             outlined
             readonly
-            value="ABC"
             disabled
             hide-details
           >
@@ -23,9 +23,9 @@
         <v-col cols="4">
           <v-text-field
             label="ชื่อรถ"
+            :value="last.car.C_NAME"
             outlined
             readonly
-            value="รถยนต์ 1"
             disabled
             hide-details
           ></v-text-field>
@@ -33,10 +33,10 @@
         <v-col cols="4">
           <v-text-field
             label="วันที่ยืม"
+            :value="formatDate(last.R_TIME_BOOK)"
             outlined
             readonly
             disabled
-            value="12-2-2022"
             hide-details
           ></v-text-field>
         </v-col>
@@ -44,15 +44,6 @@
 
       <v-row>
         <v-col cols="4">
-          <!-- <v-menu
-            v-model="datePicker"
-            :close-on-content-click="false"
-            :nudge-right="40"
-            transition="scale-transition"
-            offset-y
-            min-width="auto"
-          >
-            <template v-slot:activator="{ on, attrs }"> -->
           <v-text-field
             v-model="returnCarForm.returnDate"
             label="วันที่คืนรถ"
@@ -62,29 +53,8 @@
             disabled
             :rules="[(v) => !!v || 'กรุณาเลือกวันที่คืนรถ']"
           ></v-text-field>
-          <!-- </template>
-            <v-date-picker
-              v-model="returnCarForm.returnDate"
-              @input="datePicker = false"
-              scrollable
-              landscape="true"
-              color="#2c3639"
-            ></v-date-picker>
-          </v-menu> -->
         </v-col>
         <v-col cols="4">
-          <!-- <v-menu
-            ref="returnTimeMenu"
-            v-model="timePicker"
-            :close-on-content-click="false"
-            :nudge-right="40"
-            :return-value.sync="returnCarForm.returnTime"
-            transition="scale-transition"
-            offset-y
-            max-width="290px"
-            min-width="290px"
-          >
-            <template v-slot:activator="{ on, attrs }"> -->
           <v-text-field
             v-model="returnCarForm.returnTime"
             label="เวลาที่คืน"
@@ -94,19 +64,6 @@
             disabled
             :rules="[(v) => !!v || 'กรุณาเลือกเวลาที่คืน']"
           ></v-text-field>
-          <!-- </template>
-            <v-time-picker
-              v-if="timePicker"
-              v-model="returnCarForm.returnTime"
-              full-width
-              format="24hr"
-              scrollable
-              color="#2c3639"
-              @click:minute="
-                $refs.returnTimeMenu.save(returnCarForm.returnTime)
-              "
-            ></v-time-picker>
-          </v-menu> -->
         </v-col>
         <v-col cols="4">
           <v-file-input
@@ -117,6 +74,7 @@
             accept="image/*"
             show-size
             color="#2c3639"
+            v-model="image"
           >
           </v-file-input>
         </v-col>
@@ -129,18 +87,25 @@
             color="#2c3639"
             rows="4"
             hide-details
+            v-model="note"
           ></v-textarea>
         </v-col>
       </v-row>
     </v-card-text>
     <v-card-actions>
       <v-spacer></v-spacer>
-      <v-btn text color="blue">ยืนยัน</v-btn>
+      <v-btn text color="blue" @click="returnCar">ยืนยัน</v-btn>
     </v-card-actions>
   </v-card>
 </template>
 <script>
 export default {
+  async asyncData({ store, $axios }) {
+    store.dispatch('Auth/setAuthTrue')
+    const { EM_ID } = store.getters['Auth/getUser']
+    const last = await $axios.$get('/reservation/latest/' + EM_ID)
+    return { last }
+  },
   data() {
     const now = new Date()
     const myTimeZone = 7
@@ -150,12 +115,42 @@ export default {
       timePicker: false,
       returnTimeMenu: null,
       dialog: false,
+      image: null,
+      note: '',
       returnCarForm: {
-        bookingId: '',
         returnDate: now.toISOString().substr(0, 10),
         returnTime: now.toISOString().substr(11, 5),
       },
     }
+  },
+
+  methods: {
+    formatDate(date) {
+      // dd/mm/yyyy
+      const d = new Date(date)
+      const year = d.getFullYear()
+      const month = d.getMonth() + 1
+      const day = d.getDate()
+      return `${day}/${month}/${year}`
+    },
+
+    formatTime(time) {
+      const t = new Date(time)
+      return t.toLocaleTimeString('th-TH', {
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+    },
+    async returnCar() {
+      console.log('returnCar')
+      const { R_ID } = this.last
+      var form = new FormData()
+      form.append('R_ID', R_ID)
+      form.append('R_RETURN_NOTE', this.note)
+      form.append('img', this.image)
+      const { data } = await this.$axios.$post('/reservation/return', form)
+      console.log(data)
+    },
   },
 }
 </script>

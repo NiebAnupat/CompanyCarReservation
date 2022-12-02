@@ -1,62 +1,6 @@
 export const state = () => ({
   selectedCar: null,
-  cars: [
-    {
-      id: 1,
-      name: 'Audi A4',
-      images: [
-        'https://img.khaorot.com/crop/640x362/2021/03/11/5Cq7JfHF/730-dbfa.jpeg',
-        'http://www.headlightmag.com/hlmwp/wp-content/uploads/2020/08/A195681_medium.jpg',
-      ],
-      description: 'Audi A4 is a great car',
-      isFavorite: true,
-      level: 'พนักงานทั่วไป',
-    },
-    {
-      id: 2,
-      name: 'BMW 3 Series',
-      images: [
-        'https://s359.kapook.com/pagebuilder/1c9b001c-d011-4ed5-90c9-3ae2adb327b7.jpg',
-        'https://www.9carthai.com/wp-content/uploads/2022/05/2023-BMW-3-Series-01.jpeg',
-      ],
-      description: 'BMW 3 Series is a great car',
-      isFavorite: false,
-      level: 'พนักงานทั่วไป',
-    },
-    {
-      id: 3,
-      name: 'Mercedes-Benz C-Class',
-      images: [
-        'https://www.headlightmag.com/hlmwp/wp-content/uploads/2022/01/21C0053_003.jpg',
-        'https://pbs.twimg.com/media/FSTXdsAUYAIJ9q9?format=jpg&name=900x900',
-        'https://www.mercedes-benz.co.th/th/passengercars/mercedes-benz-cars/models/c-class/coupe-c205/design/equipment-lines/_jcr_content/swipeableteaserbox/par/swipeableteaser/asset.MQ6.12.20190625095400.jpeg',
-      ],
-      description: 'Mercedes-Benz C-Class is a great car',
-      isFavorite: true,
-      level: 'ผู้บริหาร',
-    },
-    {
-      id: 4,
-      name: 'Volvo S60',
-      images: [
-        'https://www.volvocars.com/images/v/-/media/market-assets/thailand/applications/dotcom/images/pdp/my21/s60-hybrid/imagewithtestdrives60alt-text--volvos60recharge.jpg?h=1920&iar=0&w=2560',
-        'http://www.headlightmag.com/hlmwp/wp-content/uploads/2020/01/230845_New_Volvo_S60_R-Design_exterior.jpg',
-      ],
-      description: 'Volvo S60 is a great car',
-      isFavorite: false,
-      level: 'ผู้จัดการ',
-    },
-    {
-      id: 5,
-      name: 'Volvo V60',
-      images: [
-        'https://imgcdn.zigwheels.co.th/medium/gallery/exterior/39/401/volvo-v60-16038.jpg',
-      ],
-      description: 'Volvo V60 is a great car',
-      isFavorite: false,
-      level: 'ผู้บริหาร',
-    },
-  ],
+  cars: [],
 })
 
 export const getters = {
@@ -71,7 +15,7 @@ export const mutations = {
     state.selectedCar = car
   },
   toggleFavorite(state, car) {
-    const index = state.cars.findIndex((c) => c.id === car.id)
+    const index = state.cars.findIndex((c) => c.C_ID === car.C_ID)
     state.cars[index].isFavorite = !state.cars[index].isFavorite
   },
 
@@ -84,13 +28,24 @@ export const mutations = {
     const index = state.cars.findIndex((c) => c.id === carID)
     state.cars.splice(index, 1)
   },
+
+  addCar(state, car) {
+    state.cars.push(car)
+  },
+
+  initCars(state, cars) {
+    state.cars = cars
+  },
 }
 
 export const actions = {
   setSelectedCar({ commit }, car) {
     commit('setSelectedCar', car)
   },
-  toggleFavorite({ commit }, car) {
+  async toggleFavorite({ commit, rootGetters }, car) {
+    const { C_ID } = car
+    const { EM_ID } = await rootGetters['Auth/getUser']
+    await this.$axios.$put(`/car/favorite/${C_ID}`, { EM_ID })
     commit('toggleFavorite', car)
   },
   updateCar({ commit }, car) {
@@ -98,5 +53,52 @@ export const actions = {
   },
   deleteCar({ commit }, carID) {
     commit('deleteCar', carID)
+  },
+
+  async fetchCars({ commit, rootGetters }) {
+    const { EM_ID } = await rootGetters['Auth/getUser']
+    const cars = await this.$axios.$get('/car/all')
+    const favoriteCars = await this.$axios.$get(`car/favoritecar/${EM_ID}`)
+    const allCars = await cars.map((car) => {
+      const favoriteCar = favoriteCars.find(
+        (favoriteCar) => favoriteCar.C_ID === car.C_ID
+      )
+      if (favoriteCar) car.isFavorite = true
+      else car.isFavorite = false
+      return car
+    })
+    commit('initCars', allCars)
+  },
+
+  async addCar({ commit }, car) {
+    const formData = new FormData()
+    formData.append('name', car.name)
+    formData.append('description', car.description)
+
+    // evaluate car level
+    switch (car.level) {
+      case 'พนักงานทั่วไป':
+        formData.append('level', 1)
+        break
+      case 'ผู้จัดการ':
+        formData.append('level', 2)
+        break
+      case 'ผู้บริหาร':
+        formData.append('level', 3)
+        break
+      default:
+        formData.append('level', 0)
+        break
+    }
+
+    // evaluate car images
+    if (car.images.length > 0) {
+      car.images.forEach((image) => {
+        formData.append('images', image)
+      })
+    }
+
+    const response = await this.$axios.$post('/car', formData)
+    commit('addCar', response)
   },
 }
