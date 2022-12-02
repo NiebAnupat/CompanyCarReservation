@@ -259,6 +259,7 @@ export default {
 
   methods : {
     showDetail( item ) {
+      console.log( item )
       this.detail = {
         R_ID : item.R_ID,
         R_BOOK_DATE : this.formatDate(item.R_TIME_BOOK),
@@ -266,9 +267,9 @@ export default {
         R_RETURN_DATE : this.formatDate(item.R_TIME_RETURN),
         R_RETURN_TIME : this.formatTime(item.R_TIME_RETURN),
         R_STATUS : this.getStatusText(item.R_STATUS),
-        R_DATE_RETURNED : this.formatDate(item.R_TIME_RETURNED),
-        R_TIME_RETURNED : this.formatTime(item.R_TIME_RETURNED),
-        R_FINE : item.R_FINE,
+        R_DATE_RETURNED : item.R_TIME_RETURNED ? this.formatDate(item.R_TIME_RETURNED) : '-',
+        R_TIME_RETURNED : item.R_TIME_RETURNED ? this.formatTime(item.R_TIME_RETURNED) : '-',
+        R_FINE : item.R_FINE ? item.R_FINE : '-',
         R_DESCRIPTION : item.R_DESCRIPTION,
         R_ADMIN_NOTE : item.R_ADMIN_NOTE,
         car : {

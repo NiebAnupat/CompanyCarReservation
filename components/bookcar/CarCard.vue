@@ -37,38 +37,56 @@
 </template>
 <script>
 export default {
-  name: 'CarCard',
-  props: {
-    car: {
-      type: Object,
-      required: true,
+  name : 'CarCard',
+  props : {
+    car : {
+      type : Object,
+      required : true,
     },
-    refreshData: {
-      type: Function,
-      required: true,
+    refreshData : {
+      type : Function,
+      required : true,
+    },
+    toggleSnackbar : {
+      type : Function,
+      required : true,
     },
   },
-  methods: {
+  methods : {
     async booking() {
+
+      // check if user have already reserved
+      const { EM_ID } = this.$store.getters['Auth/getUser']
+      const latest = await this.$axios.$get( '/reservation/latest/' + EM_ID )
+
+      if ( latest ) {
+
+        if ( latest.R_STATUS === 'T' || latest.R_STATUS === 'P' ) {
+          this.toggleSnackbar('คุณมีการจองรถยนต์อยู่แล้ว')
+          return
+        }
+
+      }
+
       await localStorage.setItem( 'car', JSON.stringify( this.car ) )
       await this.$router.push( '/user/bookcar/detail' )
     },
-    async toggleFavorite(C_ID) {
+    async toggleFavorite( C_ID ) {
       const EM_ID = this.$store.getters['Auth/getUser'].EM_ID
-      await this.$axios.$put(`/car/favorite/${C_ID}`, { EM_ID })
+      await this.$axios.$put( `/car/favorite/${ C_ID }`, { EM_ID } )
       this.refreshData()
     },
 
-    convertBlobToURL(blob) {
+    convertBlobToURL( blob ) {
       return (
         'data:image/jpeg;base64,' +
         new Buffer(
-          new Uint8Array(blob.data).reduce(
-            (data, byte) => data + String.fromCharCode(byte),
+          new Uint8Array( blob.data ).reduce(
+            ( data, byte ) => data + String.fromCharCode( byte ),
             ''
           ),
           'binary'
-        ).toString('base64')
+        ).toString( 'base64' )
       )
     },
   },

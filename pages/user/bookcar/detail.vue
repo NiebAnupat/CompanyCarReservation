@@ -186,7 +186,7 @@
           </v-row>
 
           <v-card-actions>
-            <v-btn color="primary" class="ml-auto" text @click="dialog = true"
+            <v-btn color="primary" :disabled="!bookDate || !returnDate ||!bookTime ||!returnTime || !bookDetail" class="ml-auto" text @click="dialog = true"
               >ยืนยัน</v-btn
             >
           </v-card-actions>

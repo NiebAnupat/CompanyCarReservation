@@ -98,7 +98,7 @@
     </v-card-text>
     <v-card-actions>
       <v-spacer></v-spacer>
-      <v-btn :disabled="isDisabled" text color="blue" @click="returnCar">ยืนยัน</v-btn>
+      <v-btn :disabled="(isDisabled) || (!image || !note)" text color="blue" @click="returnCar">ยืนยัน</v-btn>
     </v-card-actions>
   </v-card>
 </template>

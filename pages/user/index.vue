@@ -68,6 +68,7 @@
               }"
               height="37vh"
               fixed-header
+              no-data-text="ไม่มีข้อมูลการจอง"
             >
               <template v-slot:item.R_DATE_BOOK="{ item }">
                 <div>
@@ -293,7 +294,7 @@ export default {
         case 'F':
           return 'red--text text--accent-3'
         default:
-          return 'red--text text--accent-3'
+          return 'blue--text text--lighten-1'
       }
     },
 
@@ -316,16 +317,34 @@ export default {
 
     async booking( car ) {
       await localStorage.setItem( 'car', JSON.stringify( car ) )
-      await this.$router.push( '/user/bookcar/detail' )
+      this.$router.push( '/user/bookcar/detail' )
     },
 
     toggleFavorite( car ) {
       this.$store.dispatch( 'Car/toggleFavorite', car )
+      this.refreshData()
     },
 
     async checkDetail( reservation ) {
       await this.$store.dispatch( 'Reservation/setSelected', reservation )
       this.$router.push( '/user/history' )
+    },
+
+    async refreshData() {
+      const { EM_ID } = await this.$store.getters['Auth/getUser']
+      const recent = await this.$axios.$get( '/reservation/recent/' + EM_ID )
+      var last = await this.$axios.$get( '/reservation/latest/' + EM_ID )
+      const fine = await this.$axios.$get( `/employee/${ EM_ID }/fine` )
+      const favoriteCars = await this.$axios.$get( `/car/favoritecar/${ EM_ID }/` )
+
+      if ( !last ) {
+        last = { R_STATUS : '_' }
+      }
+
+      this.recent = recent
+      this.last = last
+      this.fine = fine
+      this.favoriteCars = favoriteCars
     },
   },
 
